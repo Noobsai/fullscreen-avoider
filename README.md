@@ -4,7 +4,7 @@ GNOME Shell Extension.
 Moves the top panel to the secondary monitor if the primary is in fullscreen.
 
 ## Installation from repository
-[Gnome Shell Extensions page](https://extensions.gnome.org/)
+[Gnome Shell Extensions page](https://extensions.gnome.org/extension/4362/fullscreen-avoider/)
 
 ## Installation from git
 ```bash
