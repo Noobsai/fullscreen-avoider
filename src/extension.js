@@ -12,7 +12,7 @@ let _on_fullscreen;
 
 function get_unfullscreen_monitor() {
 	for (const monitor of LM.monitors) {
-		if (!Display.get_monitor_in_fullscreen(monitor.index)) {
+		if (!monitor.inFullscreen) {
 			return monitor;
 		}
 	}
@@ -29,7 +29,7 @@ function fullscreen_changed() {
 		return;
 	}
 
-	if (Display.get_monitor_in_fullscreen(primary_monitor.index)) {
+	if (primary_monitor.inFullscreen) {
 		move_panel(unfullscreen_monitor);
 		move_hotcorners(unfullscreen_monitor);
 	} else {
