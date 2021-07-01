@@ -1,6 +1,7 @@
 'use strict';
 
 const Gio = imports.gi.Gio;
+const GObject = imports.gi.GObject;
 const Gtk = imports.gi.Gtk;
 
 const Gettext = imports.gettext.domain('gnome-shell-extensions');
@@ -8,40 +9,35 @@ const _ = Gettext.gettext;
 
 const ExtensionUtils = imports.misc.extensionUtils;
 
-let _settings;
-
 function init() {
-	_settings = ExtensionUtils.getSettings();
 	ExtensionUtils.initTranslations();
 }
 
+const FullscreenAvoiderSettings = GObject.registerClass(
+class FullscreenAvoiderSettings extends Gtk.Grid {
+    _init(params) {
+        super._init(params);
+
+        this.margin_top = 24;
+        this.row_spacing = 6;
+        this.column_spacing = 6;
+        this.orientation = Gtk.Orientation.VERTICAL;
+		this.halign = Gtk.Align.CENTER;
+		this.valign = Gtk.Align.START;
+
+        this._settings = ExtensionUtils.getSettings();
+
+        this.move_hot_corners_label = new Gtk.Label({label: _("Move Hot Corners:"), halign: Gtk.Align.START});
+        this.move_hot_corners_control = new Gtk.Switch();
+		this.attach(this.move_hot_corners_label, 1, 1, 1, 1);
+        this.attach(this.move_hot_corners_control, 2, 1, 1, 1);
+        this._settings.bind('move-hot-corners', this.move_hot_corners_control, 'active', Gio.SettingsBindFlags.DEFAULT);
+    }
+});
+
 function buildPrefsWidget() {
-	let box = new Gtk.Box({
-		halign: Gtk.Align.CENTER,
-		orientation: Gtk.Orientation.VERTICAL,
-		'margin-top': 20,
-		'margin-bottom': 20,
-		'margin-start': 20,
-		'margin-end': 20,
-		spacing: 16
-	});
+    let widget = new FullscreenAvoiderSettings();
+    widget.show_all();
 
-	box.append(buildSwitcher('move-hot-corners', _('Move Hot Corners:')));
-
-	return box;
-}
-
-function buildSwitcher(key, labeltext) {
-	let hbox = new Gtk.Box({orientation: Gtk.Orientation.HORIZONTAL, spacing: 10 });
-
-	let label = new Gtk.Label({label: labeltext });
-
-	let switcher = new Gtk.Switch();
-
-	_settings.bind(key, switcher, 'active', Gio.SettingsBindFlags.DEFAULT);
-
-	hbox.append(label);
-	hbox.append(switcher);
-
-	return hbox;
+    return widget;
 }
