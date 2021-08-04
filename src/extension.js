@@ -40,6 +40,7 @@ function fullscreen_changed() {
 
 function move_panel(monitor) {
 	LM.panelBox.x = monitor.x;
+	LM.panelBox.y = monitor.y;
 	LM.panelBox.width = monitor.width;
 	LM.panelBox.visible = true;
 }
