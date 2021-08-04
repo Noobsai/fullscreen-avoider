@@ -11,11 +11,11 @@ const ExtensionUtils = imports.misc.extensionUtils;
 let _settings;
 
 function init() {
-	_settings = ExtensionUtils.getSettings();
 	ExtensionUtils.initTranslations();
 }
 
 function buildPrefsWidget() {
+    _settings = ExtensionUtils.getSettings();
 	let box = new Gtk.Box({
 		halign: Gtk.Align.CENTER,
 		orientation: Gtk.Orientation.VERTICAL,
