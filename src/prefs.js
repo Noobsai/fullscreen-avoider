@@ -25,6 +25,7 @@ function buildPrefsWidget() {
 	});
 
 	box.append(buildSwitcher(settings, 'move-hot-corners', _('Move Hot Corners:')));
+	box.append(buildSwitcher(settings, 'move-notifications', _('Move Notifications:')));
 
 	return box;
 }

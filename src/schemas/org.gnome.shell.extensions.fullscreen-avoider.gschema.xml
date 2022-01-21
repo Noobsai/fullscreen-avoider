@@ -5,5 +5,10 @@
       <summary>Move Hot Corners</summary>
       <description>Move Hot Corners</description>
     </key>
+    <key name="move-notifications" type="b">
+      <default>true</default>
+      <summary>Move Notifications</summary>
+      <description>Move Notifications</description>
+    </key>
   </schema>
 </schemalist>
