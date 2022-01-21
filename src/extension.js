@@ -39,9 +39,8 @@ function fullscreen_changed() {
 }
 
 function move_panel(monitor) {
-	LM.panelBox.x = monitor.x;
-	LM.panelBox.y = monitor.y;
-	LM.panelBox.width = monitor.width;
+	LM.panelBox.set_position(monitor.x, monitor.y);
+	LM.panelBox.set_size(monitor.width, -1);
 	LM.panelBox.visible = true;
 }
 
@@ -50,24 +49,10 @@ function move_hotcorners(monitor) {
 		return;
 	}
 
-	LM.hotCorners.forEach((corner) => {
-		if (corner)
-			corner.destroy();
-	});
-	LM.hotCorners = [];
-
-	if (!LM._interfaceSettings.get_boolean('enable-hot-corners')) {
-		LM.emit('hot-corners-changed');
-		return;
-	}
-
-	let size = LM.panelBox.height;
-
-	let corner = new Layout.HotCorner(LM, monitor, monitor.x, monitor.y);
-	corner.setBarrierSize(size);
-	LM.hotCorners.push(corner);
-
-	LM.emit('hot-corners-changed');
+	let oldIndex = LM.primaryIndex;
+	LM.primaryIndex = monitor.index;
+	LM._updateHotCorners();
+	LM.primaryIndex = oldIndex;
 }
 
 function enable() {
