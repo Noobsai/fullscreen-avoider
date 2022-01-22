@@ -11,6 +11,7 @@ const { State, Urgency } = imports.ui.messageTray; // used in _updateState()
 const ExtensionUtils = imports.misc.extensionUtils;
 
 const _original_updateState = MT._updateState;
+let _panel_monitor_index = null;
 let _settings = null;
 let _on_fullscreen;
 
@@ -27,20 +28,25 @@ function fullscreen_changed() {
 		return;
 	}
 
-	let primary_monitor = LM.primaryMonitor;
-	let unfullscreen_monitor = get_unfullscreen_monitor();
+	const primary_monitor = LM.primaryMonitor;
+	const unfullscreen_monitor = get_unfullscreen_monitor();
 	if (!unfullscreen_monitor) {
 		return;
 	}
 
 	if (primary_monitor.inFullscreen) {
-		move_panel(unfullscreen_monitor);
-		move_hotcorners(unfullscreen_monitor);
-		move_notifications(unfullscreen_monitor);
+		move_all(unfullscreen_monitor);
 	} else {
-		move_panel(primary_monitor);
-		move_hotcorners(primary_monitor);
-		move_notifications(primary_monitor);
+		move_all(primary_monitor);
+	}
+}
+
+function move_all(monitor) {
+	if (_panel_monitor_index !== monitor.index) {
+		_panel_monitor_index = monitor.index;
+		move_panel(monitor);
+		move_hotcorners(monitor);
+		move_notifications(monitor);
 	}
 }
 
@@ -55,10 +61,10 @@ function move_hotcorners(monitor) {
 		return;
 	}
 
-	const oldIndex = LM.primaryIndex;
+	const old_index = LM.primaryIndex;
 	LM.primaryIndex = monitor.index;
 	LM._updateHotCorners();
-	LM.primaryIndex = oldIndex;
+	LM.primaryIndex = old_index;
 }
 
 function move_notifications(monitor) {
@@ -79,6 +85,7 @@ function create_notifications_constraint(monitor) {
 
 function enable() {
 	_settings = ExtensionUtils.getSettings();
+	_panel_monitor_index = LM.primaryIndex;
 	_on_fullscreen = Display.connect('in-fullscreen-changed', fullscreen_changed);
 	create_notifications_constraint(LM.primaryMonitor);
 	patch_updateState();
