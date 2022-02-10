@@ -92,19 +92,38 @@ class Extension {
 		func = func.replace('_updateState(', 'function(');
 		eval(`MT._updateState = ${func}`);
 	}
+
+	patch_getDraggableWindowForPosition() {
+		const patches = [
+			{ from: 'metaWindow.is_on_primary_monitor()', to: 'true' },
+		];
+
+		const { Meta } = imports.gi; // used in _getDraggableWindowForPosition(), do not remove
+
+		let func = this._original_getDraggableWindowForPosition.toString();
+		for (const { from, to } of patches) {
+			func = func.replaceAll(from, to);
+		}
+	
+		func = func.replace('_getDraggableWindowForPosition(', 'function(');
+		eval(`Main.panel._getDraggableWindowForPosition = ${func}`);
+	}
 	
 	enable() {
 		this._original_updateState = MT._updateState;
+		this._original_getDraggableWindowForPosition = Main.panel._getDraggableWindowForPosition;
 		this._settings = ExtensionUtils.getSettings();
 		this._panel_monitor_index = LM.primaryIndex;
 		this._on_fullscreen = Display.connect('in-fullscreen-changed', this.fullscreen_changed.bind(this));
 		this.create_notifications_constraint(LM.primaryMonitor);
 		this.patch_updateState();
+		this.patch_getDraggableWindowForPosition();
 	}
 	
 	disable() {
 		Display.disconnect(this._on_fullscreen);
 		MT._updateState = this._original_updateState;
+		Main.panel._getDraggableWindowForPosition = this._original_getDraggableWindowForPosition;
 		delete MT._constraint;
 		this._settings.run_dispose();
 	}
