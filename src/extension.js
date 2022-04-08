@@ -78,38 +78,42 @@ class Extension {
 		}
 	}
 
+	// To show notification on the second screen after moving the panel
 	patch_updateState() {
 		const patches = [
 			{ from: 'Main.layoutManager.primaryMonitor.', to: 'Main.layoutManager.monitors[this._constraint.index].' },
+			{ from: 'Main.', to: 'imports.ui.main.' },
+			{ from: 'State.', to: 'imports.ui.messageTray.State.' },
+			{ from: 'Urgency.', to: 'imports.ui.messageTray.Urgency.' },
 		];
-
-		const { State, Urgency } = imports.ui.messageTray; // used in _updateState(), do not remove
-
-		let func = this._original_updateState.toString();
-		for (const { from, to } of patches) {
-			func = func.replaceAll(from, to);
-		}
 	
-		func = func.replace('_updateState(', 'function(');
-		eval(`MT._updateState = ${func}`);
+		const func = this._original_updateState.toString();
+		MT._updateState = this.patch_function(func, patches);
 	}
-
+	
+	// To grab a window from the second screen after moving the panel (fixes #5)
 	patch_getDraggableWindowForPosition() {
 		const patches = [
 			{ from: 'metaWindow.is_on_primary_monitor()', to: 'true' },
+			{ from: 'Main.', to: 'imports.ui.main.' },
+			{ from: 'Meta.', to: 'imports.gi.Meta.' },
 		];
-
-		const { Meta } = imports.gi; // used in _getDraggableWindowForPosition(), do not remove
-
-		let func = this._original_getDraggableWindowForPosition.toString();
+	
+		const func = this._original_getDraggableWindowForPosition.toString();
+		Main.panel._getDraggableWindowForPosition = this.patch_function(func, patches);
+	}
+	
+	patch_function(func, patches) {
+		let args = func.substring(func.indexOf('(') + 1, func.indexOf(')')).split(', ');
+		let body = func.substring(func.indexOf('{') + 1, func.lastIndexOf('}'));
 		for (const { from, to } of patches) {
-			func = func.replaceAll(from, to);
+			body = body.replaceAll(from, to);
 		}
 	
-		func = func.replace('_getDraggableWindowForPosition(', 'function(');
-		eval(`Main.panel._getDraggableWindowForPosition = ${func}`);
+		return new Function(args, body);
 	}
 
+	// Rebuild tray icons to fix the problem with a icon placement when the top panel has been moved
 	fix_trayIconsReloaded() {
 		const extension = Main.extensionManager.lookup('trayIconsReloaded@selfmade.pl');
 		if (extension && extension.state === ExtensionUtils.ExtensionState.ENABLED) {
