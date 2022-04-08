@@ -41,6 +41,7 @@ class Extension {
 			this.move_panel(monitor);
 			this.move_hotcorners(monitor);
 			this.move_notifications(monitor);
+			this.fix_trayIconsReloaded();
 		}
 	}
 	
@@ -108,6 +109,23 @@ class Extension {
 		func = func.replace('_getDraggableWindowForPosition(', 'function(');
 		eval(`Main.panel._getDraggableWindowForPosition = ${func}`);
 	}
+
+	fix_trayIconsReloaded() {
+		const extension = Main.extensionManager.lookup('trayIconsReloaded@selfmade.pl');
+		if (extension && extension.state === ExtensionUtils.ExtensionState.ENABLED) {
+			if (!extension.stateObj._rebuild) {
+				extension.stateObj._rebuild = function() {
+					this.TrayIcons._destroy();
+					this.TrayIcons = new extension.imports.extension.TrayIconsClass(this._settings);
+					this._setTrayMargin();
+					this._setIconSize();
+					this._setTrayArea();
+				};
+			}
+	
+			extension.stateObj._rebuild();
+		}
+	}
 	
 	enable() {
 		this._original_updateState = MT._updateState;
@@ -131,5 +149,5 @@ class Extension {
 
 function init() {
 	ExtensionUtils.initTranslations();
-    return new Extension();
+	return new Extension();
 }
