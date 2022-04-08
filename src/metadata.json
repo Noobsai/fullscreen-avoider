@@ -7,5 +7,5 @@
 	"description": "Moves the top panel to the secondary monitor if the primary is in fullscreen", 
 	"url": "https://github.com/Noobsai/fullscreen-avoider", 
 	"version": 6,
-	"shell-version": ["40", "41"]
+	"shell-version": ["40", "41", "42"]
 }
