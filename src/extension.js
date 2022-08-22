@@ -42,6 +42,7 @@ class Extension {
 			this.move_hotcorners(monitor);
 			this.move_notifications(monitor);
 			this.fix_trayIconsReloaded();
+			this.fix_appindicatorsupport();
 		}
 	}
 	
@@ -128,6 +129,14 @@ class Extension {
 			}
 	
 			extension.stateObj._rebuild();
+		}
+	}
+
+	fix_appindicatorsupport() {
+		const extension = Main.extensionManager.lookup('appindicatorsupport@rgcjonas.gmail.com');
+		if (extension && extension.state === ExtensionUtils.ExtensionState.ENABLED) {
+			extension.stateObj.disable();
+			extension.stateObj.enable();
 		}
 	}
 	
