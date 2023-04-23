@@ -8,8 +8,6 @@ const MT = Main.messageTray;
 const Display = global.display;
 const ExtensionUtils = imports.misc.extensionUtils;
 
-imports.ui.main.layoutManager.monitors
-
 class Extension {
 	get_unfullscreen_monitor() {
 		for (const monitor of LM.monitors) {
@@ -32,7 +30,8 @@ class Extension {
 	
 		if (primary_monitor.inFullscreen) {
 			this.move_all(unfullscreen_monitor);
-		} else {
+		} 
+		else {
 			this.move_all(primary_monitor);
 		}
 	}
