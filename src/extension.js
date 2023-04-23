@@ -8,6 +8,8 @@ const MT = Main.messageTray;
 const Display = global.display;
 const ExtensionUtils = imports.misc.extensionUtils;
 
+imports.ui.main.layoutManager.monitors
+
 class Extension {
 	get_unfullscreen_monitor() {
 		for (const monitor of LM.monitors) {
@@ -32,6 +34,14 @@ class Extension {
 			this.move_all(unfullscreen_monitor);
 		} else {
 			this.move_all(primary_monitor);
+		}
+	}
+
+	get_second_monitor() {
+		for (const monitor of LM.monitors) {
+			if (monitor !== LM.primaryMonitor) {
+				return monitor;
+			}
 		}
 	}
 	
@@ -61,14 +71,20 @@ class Extension {
 		LM._updateHotCorners();
 		LM.primaryIndex = old_index;
 	}
-	
+
 	move_notifications(monitor) {
 		if (!this._settings.get_boolean('move-notifications')) {
 			return;
 		}
 	
-		MT._constraint.index = monitor.index;
+		if (MT._constraint) {
+			MT._constraint.index = monitor.index;
+		}
+		else {
+			this.create_notifications_constraint(monitor);
+		}
 	}
+	
 	
 	create_notifications_constraint(monitor) {
 		const constraint = MT.get_constraints()[0];
@@ -136,19 +152,27 @@ class Extension {
 		this._original_getDraggableWindowForPosition = Main.panel._getDraggableWindowForPosition;
 		this._settings = ExtensionUtils.getSettings();
 		this._panel_monitor_index = LM.primaryIndex;
-		this._on_fullscreen = Display.connect('in-fullscreen-changed', this.fullscreen_changed.bind(this));
+
+		if (!this._settings.get_boolean('permanent-move')) {
+			this._on_fullscreen = Display.connect('in-fullscreen-changed', this.fullscreen_changed.bind(this));
+		}
+		else {
+			this.move_all(this.get_second_monitor());
+		}
+
 		this.create_notifications_constraint(LM.primaryMonitor);
 		this.patch_updateState();
 		this.patch_getDraggableWindowForPosition();
 	}
 	
 	disable() {
+		this.move_all(LM.primaryMonitor);
 		Display.disconnect(this._on_fullscreen);
 		MT._updateState = this._original_updateState;
 		Main.panel._getDraggableWindowForPosition = this._original_getDraggableWindowForPosition;
 		delete MT._constraint;
 		this._settings.run_dispose();
-	}
+	}	
 }
 
 function init() {

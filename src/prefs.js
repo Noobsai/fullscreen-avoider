@@ -26,6 +26,7 @@ function buildPrefsWidget() {
 
 	box.append(buildSwitcher(settings, 'move-hot-corners', _('Move Hot Corners:')));
 	box.append(buildSwitcher(settings, 'move-notifications', _('Move Notifications:')));
+	box.append(buildSwitcher(settings, 'permanent-move', _('Permanently Move Topbar:')));
 
 	return box;
 }
