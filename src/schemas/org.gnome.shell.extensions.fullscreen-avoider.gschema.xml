@@ -10,5 +10,10 @@
       <summary>Move Notifications</summary>
       <description>Move Notifications</description>
     </key>
+        <key name="permanent-move" type="b">
+      <default>false</default>
+      <summary>Permanently Move Topbar</summary>
+      <description>Permanently Move Topbar</description>
+    </key>
   </schema>
 </schemalist>
