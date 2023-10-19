@@ -1,14 +1,14 @@
 'use strict';
 
-const GObject = imports.gi.GObject;
-const Layout = imports.ui.layout;
-const Main = imports.ui.main;
+import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 const LM = Main.layoutManager;
 const MT = Main.messageTray;
 const Display = global.display;
-const ExtensionUtils = imports.misc.extensionUtils;
 
-class Extension {
+import { Extension } from 'resource:///org/gnome/shell/extensions/extension.js';
+import { ExtensionState } from 'resource:///org/gnome/shell/misc/extensionUtils.js';
+
+export default class FullscreenAvoider extends Extension {
 	get_unfullscreen_monitor() {
 		for (const monitor of LM.monitors) {
 			if (!monitor.inFullscreen) {
@@ -116,7 +116,7 @@ class Extension {
 	// Rebuild tray icons to fix the problem with a icon placement when the top panel has been moved
 	fix_trayIconsReloaded() {
 		const extension = Main.extensionManager.lookup('trayIconsReloaded@selfmade.pl');
-		if (extension && extension.state === ExtensionUtils.ExtensionState.ENABLED) {
+		if (extension && extension.state === ExtensionState.ENABLED) {
 			if (!extension.stateObj._rebuild) {
 				extension.stateObj._rebuild = function() {
 					this.TrayIcons._destroy();
@@ -134,7 +134,7 @@ class Extension {
 	enable() {
 		this._original_updateState = MT._updateState;
 		this._original_getDraggableWindowForPosition = Main.panel._getDraggableWindowForPosition;
-		this._settings = ExtensionUtils.getSettings();
+		this._settings = this.getSettings();
 		this._panel_monitor_index = LM.primaryIndex;
 		this._on_fullscreen = Display.connect('in-fullscreen-changed', this.fullscreen_changed.bind(this));
 		this.create_notifications_constraint(LM.primaryMonitor);
@@ -149,9 +149,4 @@ class Extension {
 		delete MT._constraint;
 		this._settings.run_dispose();
 	}
-}
-
-function init() {
-	ExtensionUtils.initTranslations();
-	return new Extension();
 }
