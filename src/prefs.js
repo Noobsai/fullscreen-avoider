@@ -12,9 +12,9 @@ export default class FullscreenAvoiderPreferences extends ExtensionPreferences {
 		const page = Adw.PreferencesPage.new();
 
 		const group = Adw.PreferencesGroup.new();
-        group.set_title(_("Settings"));
+		group.set_title(_("Settings"));
 
-        page.add(group);
+		page.add(group);
 
 		group.add(buildSwitcher(settings, 'move-hot-corners', _('Move Hot Corners:')));
 		group.add(buildSwitcher(settings, 'move-notifications', _('Move Notifications:')));
