@@ -1,7 +1,6 @@
 'use strict';
 
 import { Extension } from 'resource:///org/gnome/shell/extensions/extension.js';
-import { ExtensionState } from 'resource:///org/gnome/shell/misc/extensionUtils.js';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import { State, Urgency } from 'resource:///org/gnome/shell/ui/messageTray.js';
 import Meta from 'gi://Meta';
@@ -42,7 +41,6 @@ export default class FullscreenAvoider extends Extension {
 			this.move_panel(monitor);
 			this.move_hotcorners(monitor);
 			this.move_notifications(monitor);
-			this.fix_trayIconsReloaded();
 		}
 	}
 
@@ -109,24 +107,6 @@ export default class FullscreenAvoider extends Extension {
 		return new Function(import_names, `return function(${args}){ ${body} };`)(...import_refs);
 	}
 
-	// Rebuild tray icons to fix the problem with a icon placement when the top panel has been moved
-	fix_trayIconsReloaded() {
-		const extension = Main.extensionManager.lookup('trayIconsReloaded@selfmade.pl');
-		if (extension && extension.state === ExtensionState.ENABLED) {
-			if (!extension.stateObj._rebuild) {
-				extension.stateObj._rebuild = function () {
-					this.TrayIcons._destroy();
-					this.TrayIcons = new extension.imports.extension.TrayIconsClass(this._settings);
-					this._setTrayMargin();
-					this._setIconSize();
-					this._setTrayArea();
-				};
-			}
-
-			extension.stateObj._rebuild();
-		}
-	}
-
 	enable() {
 		this._original_updateState = MT._updateState;
 		this._original_getDraggableWindowForPosition = Main.panel._getDraggableWindowForPosition;
@@ -143,6 +123,11 @@ export default class FullscreenAvoider extends Extension {
 		MT._updateState = this._original_updateState;
 		Main.panel._getDraggableWindowForPosition = this._original_getDraggableWindowForPosition;
 		delete MT._constraint;
-		this._settings.run_dispose();
+
+		delete this._original_updateState;
+		delete this._original_getDraggableWindowForPosition;
+		delete this._settings;
+		delete this._panel_monitor_index;
+		delete this._on_fullscreen;
 	}
 }
