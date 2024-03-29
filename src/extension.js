@@ -116,9 +116,11 @@ export default class FullscreenAvoider extends Extension {
 		this.create_notifications_constraint(LM.primaryMonitor);
 		this.patch_updateState();
 		this.patch_getDraggableWindowForPosition();
+		this.fullscreen_changed();
 	}
 
 	disable() {
+		this.move_all(LM.primaryMonitor);
 		Display.disconnect(this._on_fullscreen);
 		MT._updateState = this._original_updateState;
 		Main.panel._getDraggableWindowForPosition = this._original_getDraggableWindowForPosition;
