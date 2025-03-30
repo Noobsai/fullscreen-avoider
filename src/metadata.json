@@ -1,11 +1,10 @@
 {
 	"extension-id": "fullscreen-avoider",
-	"uuid": "fullscreen-avoider@noobsai.github.com", 
-	"name": "Fullscreen Avoider", 
+	"uuid": "fullscreen-avoider@noobsai.github.com",
+	"name": "Fullscreen Avoider",
  	"gettext-domain": "gnome-shell-extensions",
 	"settings-schema": "org.gnome.shell.extensions.fullscreen-avoider",
-	"description": "Moves the top panel to the secondary monitor if the primary is in fullscreen", 
-	"url": "https://github.com/Noobsai/fullscreen-avoider", 
-	"version": 13,
-	"shell-version": ["45", "46", "47"]
+	"description": "Moves the top panel to the secondary monitor if the primary is in fullscreen",
+	"url": "https://github.com/Noobsai/fullscreen-avoider",
+	"shell-version": ["45", "46", "47", "48"]
 }
