@@ -6,5 +6,5 @@
 	"settings-schema": "org.gnome.shell.extensions.fullscreen-avoider",
 	"description": "Moves the top panel to the secondary monitor if the primary is in fullscreen",
 	"url": "https://github.com/Noobsai/fullscreen-avoider",
-	"shell-version": ["45", "46", "47", "48"]
+	"shell-version": ["45", "46", "47", "48", "49"]
 }
