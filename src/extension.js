@@ -10,7 +10,14 @@ const Display = global.display;
 
 export default class FullscreenAvoider extends Extension {
 	get_unfullscreen_monitor() {
+		const persistent = this._settings.get_boolean('persistent-panel');
+
 		for (const monitor of LM.monitors) {
+			// Allow secondary monitor if persistent mode is on
+			if (persistent && monitor.index !== LM.primaryIndex) {
+				return monitor;
+			}
+			
 			if (!monitor.inFullscreen) {
 				return monitor;
 			}
@@ -36,11 +43,16 @@ export default class FullscreenAvoider extends Extension {
 	}
 
 	move_all(monitor) {
+		const persistent = this._settings.get_boolean('persistent-panel');
+
 		if (this._panel_monitor_index !== monitor.index) {
 			this._panel_monitor_index = monitor.index;
 			this.move_panel(monitor);
 			this.move_hotcorners(monitor);
 			this.move_notifications(monitor);
+		} else if (persistent) {
+			// Force visibility update if persistent
+			this.move_panel(monitor);
 		}
 	}
 
@@ -97,6 +109,22 @@ export default class FullscreenAvoider extends Extension {
 		Main.panel._getDraggableWindowForPosition = this.patch_function(func, patches, 'Main, Meta', [Main, Meta]);
 	}
 
+	// Prevent GNOME from hiding panel when primary is fullscreen
+	patch_updatePanel() {
+		this._original_updatePanel = LM._updatePanel;
+		const extension = this;
+		
+		LM._updatePanel = function() {
+			extension._original_updatePanel.call(LM);
+
+			if (extension._settings && extension._settings.get_boolean('persistent-panel')) {
+				if (LM.primaryMonitor.inFullscreen && extension._panel_monitor_index !== LM.primaryIndex) {
+					LM.panelBox.visible = true;
+				}
+			}
+		};
+	}
+
 	patch_function(func, patches, import_names='', import_refs=[]) {
 		let args = func.substring(func.indexOf('(') + 1, func.indexOf(')')).split(', ');
 		let body = func.substring(func.indexOf('{') + 1, func.lastIndexOf('}'));
@@ -116,6 +144,10 @@ export default class FullscreenAvoider extends Extension {
 		this.create_notifications_constraint(LM.primaryMonitor);
 		this.patch_updateState();
 		this.patch_getDraggableWindowForPosition();
+		
+		// Apply panel patch
+		this.patch_updatePanel();
+		
 		this.fullscreen_changed();
 	}
 
@@ -124,10 +156,16 @@ export default class FullscreenAvoider extends Extension {
 		Display.disconnect(this._on_fullscreen);
 		MT._updateState = this._original_updateState;
 		Main.panel._getDraggableWindowForPosition = this._original_getDraggableWindowForPosition;
-		delete MT._constraint;
+		
+		// Restore panel patch
+		if (this._original_updatePanel) {
+			LM._updatePanel = this._original_updatePanel;
+		}
 
+		delete MT._constraint;
 		delete this._original_updateState;
 		delete this._original_getDraggableWindowForPosition;
+		delete this._original_updatePanel;
 		delete this._settings;
 		delete this._panel_monitor_index;
 		delete this._on_fullscreen;
