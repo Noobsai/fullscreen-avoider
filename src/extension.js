@@ -1,8 +1,7 @@
 'use strict';
 
-import { Extension } from 'resource:///org/gnome/shell/extensions/extension.js';
+import { Extension, InjectionManager } from 'resource:///org/gnome/shell/extensions/extension.js';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
-import { State, Urgency } from 'resource:///org/gnome/shell/ui/messageTray.js';
 import Meta from 'gi://Meta';
 const LM = Main.layoutManager;
 const MT = Main.messageTray;
@@ -77,39 +76,48 @@ export default class FullscreenAvoider extends Extension {
 		}
 	}
 
-	// To show notification on the second screen after moving the panel
 	patch_updateState() {
-		const patches = [
-			{ from: 'Main.layoutManager.primaryMonitor.', to: 'Main.layoutManager.monitors[this._constraint.index].' },
-		];
+		this._injections.overrideMethod(Object.getPrototypeOf(MT), '_updateState', original => function (...parameters) {
+			const primaryMonitor = LM.primaryMonitor;
+			const monitor = this._constraint?.primary
+				? primaryMonitor
+				: LM.monitors[this._constraint?.index] ?? primaryMonitor;
+			if (!primaryMonitor || monitor === primaryMonitor)
+				return original.apply(this, parameters);
 
-		const func = this._original_updateState.toString();
-		MT._updateState = this.patch_function(func, patches, 'Main, State, Urgency', [Main, State, Urgency]);
+			const descriptor = Object.getOwnPropertyDescriptor(primaryMonitor, 'inFullscreen');
+			Object.defineProperty(primaryMonitor, 'inFullscreen', {
+				value: monitor.inFullscreen,
+				configurable: true,
+			});
+			try {
+				return original.apply(this, parameters);
+			} finally {
+				if (descriptor)
+					Object.defineProperty(primaryMonitor, 'inFullscreen', descriptor);
+				else
+					delete primaryMonitor.inFullscreen;
+			}
+		});
 	}
 
-	// To grab a window from the second screen after moving the panel (fixes #5)
 	patch_getDraggableWindowForPosition() {
-		const patches = [
-			{ from: 'metaWindow.is_on_primary_monitor()', to: 'true' },
-		];
-
-		const func = this._original_getDraggableWindowForPosition.toString();
-		Main.panel._getDraggableWindowForPosition = this.patch_function(func, patches, 'Main, Meta', [Main, Meta]);
-	}
-
-	patch_function(func, patches, import_names='', import_refs=[]) {
-		let args = func.substring(func.indexOf('(') + 1, func.indexOf(')')).split(', ');
-		let body = func.substring(func.indexOf('{') + 1, func.lastIndexOf('}'));
-		for (const { from, to } of patches) {
-			body = body.replaceAll(from, to);
-		}
-
-		return new Function(import_names, `return function(${args}){ ${body} };`)(...import_refs);
+		this._injections.overrideMethod(Main.panel, '_getDraggableWindowForPosition', () => function (stageX) {
+			const monitor = LM.findMonitorForActor(LM.panelBox) ?? LM.primaryMonitor;
+			const windows = global.workspace_manager.get_active_workspace().list_windows();
+			return global.display.sort_windows_by_stacking(windows).reverse().find(window => {
+				const rectangle = window.get_frame_rect();
+				return window.get_monitor() === monitor?.index &&
+					window.showing_on_its_workspace() &&
+					window.get_window_type() !== Meta.WindowType.DESKTOP &&
+					window.maximized_vertically &&
+					stageX > rectangle.x && stageX < rectangle.x + rectangle.width;
+			});
+		});
 	}
 
 	enable() {
-		this._original_updateState = MT._updateState;
-		this._original_getDraggableWindowForPosition = Main.panel._getDraggableWindowForPosition;
+		this._injections = new InjectionManager();
 		this._settings = this.getSettings();
 		this._panel_monitor_index = LM.primaryIndex;
 		this._on_fullscreen = Display.connect('in-fullscreen-changed', this.fullscreen_changed.bind(this));
@@ -122,12 +130,10 @@ export default class FullscreenAvoider extends Extension {
 	disable() {
 		this.move_all(LM.primaryMonitor);
 		Display.disconnect(this._on_fullscreen);
-		MT._updateState = this._original_updateState;
-		Main.panel._getDraggableWindowForPosition = this._original_getDraggableWindowForPosition;
+		this._injections.clear();
 		delete MT._constraint;
 
-		delete this._original_updateState;
-		delete this._original_getDraggableWindowForPosition;
+		delete this._injections;
 		delete this._settings;
 		delete this._panel_monitor_index;
 		delete this._on_fullscreen;
