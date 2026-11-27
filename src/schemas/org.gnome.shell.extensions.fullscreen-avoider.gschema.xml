@@ -10,5 +10,12 @@
       <summary>Move Notifications</summary>
       <description>Move Notifications</description>
     </key>
+    <key name="persistent-panel" type="b">
+      <default>false</default>
+      <summary>Keep Panel Visible</summary>
+      <description>
+        Keep panel visible on the secondary monitor even if that monitor is in fullscreen mode.
+      </description>
+    </key>
   </schema>
 </schemalist>

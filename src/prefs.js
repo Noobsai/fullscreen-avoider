@@ -18,6 +18,7 @@ export default class FullscreenAvoiderPreferences extends ExtensionPreferences {
 
 		group.add(buildSwitcher(settings, 'move-hot-corners', _('Move Hot Corners:')));
 		group.add(buildSwitcher(settings, 'move-notifications', _('Move Notifications:')));
+		group.add(buildSwitcher(settings, 'persistent-panel', _('Persistent Panel:')));
 
 		window.add(page)
 	}
